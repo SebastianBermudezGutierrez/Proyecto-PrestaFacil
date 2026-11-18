@@ -1,0 +1,78 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Estados de los objetos
+enum ItemStatus {
+  AVAILABLE
+  LOANED
+  INACTIVE
+}
+
+// Estados de los préstamos
+enum LoanStatus {
+  ACTIVE
+  RETURNED
+  CANCELLED
+}
+
+// Usuarios de PrestaFácil
+model User {
+  id        String   @id @db.Uuid
+  email     String?  @unique
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  items Item[]
+  loans Loan[] @relation("LoanCreator")
+}
+
+// Objetos registrados
+model Item {
+  id          String     @id @default(uuid()) @db.Uuid
+  name        String     @db.VarChar(120)
+  description String?    @db.Text
+  category    String?    @db.VarChar(80)
+  status      ItemStatus @default(AVAILABLE)
+
+  ownerId   String   @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  owner User  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  loans Loan[]
+
+  @@index([ownerId])
+  @@index([status])
+}
+
+// Préstamos registrados
+model Loan {
+  id             String     @id @default(uuid()) @db.Uuid
+  borrowerName   String     @db.VarChar(120)
+  borrowerContact String?   @db.VarChar(100)
+  loanDate       DateTime   @default(now()) @db.Timestamptz(3)
+  dueDate        DateTime   @db.Timestamptz(3)
+  returnedAt     DateTime?  @db.Timestamptz(3)
+  status         LoanStatus @default(ACTIVE)
+  notes          String?    @db.Text
+
+  itemId      String @db.Uuid
+  createdById String @db.Uuid
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  item      Item @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  createdBy User @relation("LoanCreator", fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([itemId])
+  @@index([createdById])
+  @@index([status])
+  @@index([dueDate])
+}
