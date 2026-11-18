@@ -8,6 +8,8 @@ async function bootstrap() {
     instrument: ObserveInstrument,
   });
 
+  console.log("VALIDATION PIPE CONFIGURADO");
+
   // Encabezados HTTP de seguridad
   app.use(helmet());
 
@@ -25,7 +27,11 @@ async function bootstrap() {
     process.env.FRONTEND_URL ?? "http://localhost:3001";
 
   app.enableCors({
-    origin: frontendUrl,
+    origin: [
+      frontendUrl,
+      "http://localhost:3001",
+      "http://127.0.0.1:3001",
+    ],
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
