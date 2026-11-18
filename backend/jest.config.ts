@@ -2,7 +2,6 @@ import type { Config } from 'jest';
 import { pathsToModuleNameMapper } from 'ts-jest';
 import ts from 'typescript';
 
-// Leer las rutas configuradas en tsconfig.json
 const { config: tsconfig } = ts.readConfigFile(
   './tsconfig.json',
   ts.sys.readFile,
@@ -11,15 +10,23 @@ const { config: tsconfig } = ts.readConfigFile(
 const paths = tsconfig?.compilerOptions?.paths ?? {};
 
 const config: Config = {
-  moduleFileExtensions: ['js', 'json', 'ts'],
+  preset: 'ts-jest',
   rootDir: '.',
   testRegex: '.*\\.spec\\.ts$',
+  moduleFileExtensions: ['js', 'json', 'ts'],
+
+  extensionsToTreatAsEsm: ['.ts'],
 
   transform: {
-    '^.+\\.(t|j)s$': 'ts-jest',
+    '^.+\\.ts$': [
+      'ts-jest',
+      {
+        useESM: true,
+        tsconfig: './tsconfig.json',
+      },
+    ],
   },
 
-  // Permite resolver imports .js hacia archivos TypeScript .ts
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
     ...pathsToModuleNameMapper(paths, {
